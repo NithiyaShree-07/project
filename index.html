@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="google-site-verification" content="CCki_fHTWgoTaclG1DVac7UOavOZRKYX6SiLx9k-Euc" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BuildCost Pro — Construction & Repair Estimator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#181410;--bg2:#201c14;--bg3:#272218;--card:#2c271c;--border:#3a3426;
+  --accent:#c9820a;--accent2:#e8a020;--steel:#7a8a8f;--text:#ede8dc;
+  --text2:#a09880;--text3:#665e4a;--green:#2e7d52;--greenlt:#5ab882;
+  --warn:#b57a12;--blue:#2563a8;--bluelt:#70a8e0;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+.sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;}
+.logo{padding:1.4rem 1.25rem 1rem;border-bottom:1px solid var(--border);margin-bottom:.75rem;}
+.logo-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.08em;color:var(--accent2);line-height:1;}
+.logo-sub{font-size:10px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-top:3px;}
+.nav{flex:1;padding:0 .75rem;overflow-y:auto;}
+.nav-section{font-size:10px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;padding:.6rem .5rem .25rem;margin-top:.5rem;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;color:var(--text2);font-size:13px;margin-bottom:2px;transition:background .15s,color .15s;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--bg3);color:var(--accent2);}
+.nav-icon{font-size:15px;width:18px;text-align:center;}
+.sidebar-footer{padding:.75rem 1.25rem;border-top:1px solid var(--border);font-size:11px;color:var(--text3);}
+
+.main{margin-left:220px;min-height:100vh;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--bg2);border-bottom:1px solid var(--border);padding:.85rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-title{font-size:13px;color:var(--text2);}
+.topbar-title span{color:var(--text);font-weight:500;}
+.tab-pills{display:flex;gap:6px;}
+.tab-pill{font-size:12px;padding:4px 14px;border-radius:20px;border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:all .15s;background:transparent;}
+.tab-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+.topbar-badge{font-size:11px;background:var(--accent);color:#fff;padding:3px 10px;border-radius:20px;font-weight:500;}
+
+.content{padding:1.75rem 2rem 3rem;}
+
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:1.75rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;position:relative;overflow:hidden;animation:fadeUp .4s ease both;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.stat-card.c-steel::before{background:var(--steel);}
+.stat-card.c-green::before{background:var(--green);}
+.stat-card.c-blue::before{background:var(--blue);}
+.stat-card.c-warn::before{background:var(--warn);}
+.stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--text);letter-spacing:.02em;line-height:1;}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem;}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.panel-head{padding:.9rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.06em;color:var(--text);}
+.panel-tag{font-size:10px;color:var(--accent2);background:rgba(200,130,10,.12);padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.08em;}
+.panel-tag.blue{color:var(--bluelt);background:rgba(37,99,168,.15);}
+.panel-body{padding:1.2rem;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;}
+.form-group input,.form-group select{background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+.form-group select option{background:var(--bg3);}
+
+.section-divider{display:flex;align-items:center;gap:10px;margin:1rem 0 .85rem;}
+.section-divider span{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.estimate-btn{margin-top:1.1rem;width:100%;padding:11px;border:none;border-radius:6px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.1em;cursor:pointer;transition:background .2s,transform .1s;}
+.estimate-btn.amber{background:var(--accent);}
+.estimate-btn.amber:hover{background:var(--accent2);}
+.estimate-btn.blue-btn{background:var(--blue);}
+.estimate-btn.blue-btn:hover{background:#1a4d8f;}
+.estimate-btn:active{transform:scale(.98);}
+
+.result-box{display:none;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-top:1rem;}
+.result-box.visible{display:block;}
+.result-main{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--accent2);letter-spacing:.04em;line-height:1;}
+.result-main.blue{color:var(--bluelt);}
+.result-meta{font-size:12px;color:var(--text3);margin-top:4px;}
+.result-row{display:flex;gap:.75rem;margin-top:.75rem;flex-wrap:wrap;}
+.result-chip{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--text2);}
+.result-chip span{color:var(--text);font-weight:500;}
+
+.breakdown-table{width:100%;border-collapse:collapse;}
+.breakdown-table tr{border-bottom:1px solid var(--border);}
+.breakdown-table tr:last-child{border-bottom:none;}
+.breakdown-table td{padding:8px 4px;font-size:13px;}
+.breakdown-table td:first-child{color:var(--text2);}
+.breakdown-table td:last-child{text-align:right;color:var(--text);font-weight:500;}
+.breakdown-table tr.total-row td{color:var(--accent2);font-size:14px;padding-top:10px;}
+.breakdown-table tr.total-row.blue td{color:var(--bluelt);}
+
+.bar-list{display:flex;flex-direction:column;gap:9px;}
+.bar-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:3px;}
+.bar-track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+
+.history-table{width:100%;border-collapse:collapse;}
+.history-table th{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);font-weight:400;}
+.history-table td{padding:9px 8px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);}
+.history-table tbody tr:last-child td{border-bottom:none;}
+.td-hl{color:var(--accent2)!important;font-weight:500;}
+.td-hl-blue{color:var(--bluelt)!important;font-weight:500;}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.06em;}
+.b-res{background:rgba(46,125,82,.2);color:#5ab882;}
+.b-com{background:rgba(122,138,143,.2);color:#9ab0b6;}
+.b-vil{background:rgba(200,130,10,.18);color:var(--accent2);}
+.b-paint{background:rgba(37,99,168,.2);color:var(--bluelt);}
+.b-repair{background:rgba(181,122,18,.2);color:#d4a030;}
+
+.chart-wrap{position:relative;height:195px;}
+.footnote{font-size:11px;color:var(--text3);margin-top:.75rem;line-height:1.6;}
+.empty-msg{font-size:12px;color:var(--text3);text-align:center;padding:1.5rem;}
+
+/* paint info card */
+.paint-info{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;margin-top:.85rem;display:none;}
+.paint-info.visible{display:block;}
+.paint-info-title{font-size:11px;color:var(--accent2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem;}
+.paint-info-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--border);}
+.paint-info-row:last-child{border-bottom:none;}
+.paint-info-row span{color:var(--text);}
+
+/* labour summary */
+.labour-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:.85rem 1rem;margin-top:.85rem;display:none;}
+.labour-box.visible{display:block;}
+.labour-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem;}
+.labour-chip{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text2);}
+.labour-chip span{color:var(--text);font-weight:500;display:block;font-size:13px;margin-top:1px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+.stat-card:nth-child(1){animation-delay:.05s;}
+.stat-card:nth-child(2){animation-delay:.10s;}
+.stat-card:nth-child(3){animation-delay:.15s;}
+.stat-card:nth-child(4){animation-delay:.20s;}
+.stat-card:nth-child(5){animation-delay:.25s;}
+
+@media(max-width:960px){
+  .sidebar{width:56px;}
+  .logo-title,.logo-sub,.nav-item span,.nav-section,.sidebar-footer{display:none;}
+  .main{margin-left:56px;}
+  .dash-grid{grid-template-columns:1fr;}
+  .form-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-title">BuildCost</div>
+    <div class="logo-sub">Estimator Pro</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Main</div>
+    <div class="nav-item active"><span class="nav-icon">&#9783;</span><span>Dashboard</span></div>
+    <div class="nav-item"><span class="nav-icon">&#9998;</span><span>New Estimate</span></div>
+    <div class="nav-item"><span class="nav-icon">&#9776;</span><span>Project History</span></div>
+    <div class="nav-section">Modules</div>
+    <div class="nav-item" onclick="switchTab('construction')"><span class="nav-icon">&#127963;</span><span>Construction</span></div>
+    <div class="nav-item" onclick="switchTab('repair')"><span class="nav-icon">&#128396;</span><span>Painting & Repair</span></div>
+    <div class="nav-section">Info</div>
+    <div class="nav-item"><span class="nav-icon">&#9654;</span><span>ML Model Info</span></div>
+    <div class="nav-item"><span class="nav-icon">&#9881;</span><span>Settings</span></div>
+  </nav>
+  <div class="sidebar-footer">AI &amp; DS Project &bull; 2025</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">BuildCost Pro &nbsp;/&nbsp; <span id="topbar-page">Construction Estimator</span></div>
+      <div class="tab-pills">
+        <div class="tab-pill active" id="pill-construction" onclick="switchTab('construction')">&#127963; Construction</div>
+        <div class="tab-pill" id="pill-repair" onclick="switchTab('repair')">&#128396; Painting & Repair</div>
+      </div>
+    </div>
+    <div class="topbar-badge">ML Powered</div>
+  </div>
+
+  <div class="content">
+
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Estimates Run</div>
+        <div class="stat-val" id="stat-count">00</div>
+        <div class="stat-sub">This session</div>
+      </div>
+      <div class="stat-card c-steel">
+        <div class="stat-label">Construction Jobs</div>
+        <div class="stat-val" id="stat-con">00</div>
+        <div class="stat-sub">Projects estimated</div>
+      </div>
+      <div class="stat-card c-blue">
+        <div class="stat-label">Painting & Repair Jobs</div>
+        <div class="stat-val" id="stat-rep">00</div>
+        <div class="stat-sub">Works estimated</div>
+      </div>
+      <div class="stat-card c-green">
+        <div class="stat-label">Lowest Estimate</div>
+        <div class="stat-val" id="stat-low">—</div>
+        <div class="stat-sub">Across all jobs</div>
+      </div>
+      <div class="stat-card c-warn">
+        <div class="stat-label">Highest Estimate</div>
+        <div class="stat-val" id="stat-high">—</div>
+        <div class="stat-sub">Across all jobs</div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 1: CONSTRUCTION ===== -->
+    <div class="tab-content active" id="tab-construction">
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Construction Estimator</div>
+            <div class="panel-tag">Input Parameters</div>
+          </div>
+          <div class="panel-body">
+            <div class="section-divider"><span>Project Info</span></div>
+            <div class="form-grid">
+              <div class="form-group"><label>Project Type</label>
+                <select id="c-type">
+                  <option value="residential">Residential House</option>
+                  <option value="commercial">Commercial Building</option>
+                  <option value="villa">Luxury Villa</option>
+                  <option value="apartment">Apartment Complex</option>
+                  <option value="warehouse">Warehouse / Industrial</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Built-up Area (sq ft)</label><input type="number" id="c-area" value="1200" min="100" max="100000" step="50"/></div>
+              <div class="form-group"><label>Number of Floors</label><input type="number" id="c-floors" value="1" min="1" max="20"/></div>
+              <div class="form-group"><label>City / Location</label>
+                <select id="c-location">
+                  <option value="metro">Metro (Chennai, Mumbai…)</option>
+                  <option value="tier2">Tier-2 City</option>
+                  <option value="tier3">Tier-3 / Rural</option>
+                </select>
+              </div>
+            </div>
+            <div class="section-divider"><span>Quality</span></div>
+            <div class="form-grid">
+              <div class="form-group"><label>Structure Quality</label>
+                <select id="c-structure">
+                  <option value="standard">Standard (RCC)</option>
+                  <option value="premium">Premium (Quake resistant)</option>
+                  <option value="luxury">Luxury (Steel frame)</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Finishing Quality</label>
+                <select id="c-finishing">
+                  <option value="basic">Basic</option>
+                  <option value="standard">Standard</option>
+                  <option value="premium">Premium</option>
+                  <option value="luxury">Luxury</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Electrical & Plumbing</label>
+                <select id="c-mep">
+                  <option value="basic">Basic</option>
+                  <option value="standard">Standard</option>
+                  <option value="premium">Premium</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Site Condition</label>
+                <select id="c-site">
+                  <option value="normal">Normal / Flat</option>
+                  <option value="hilly">Hilly / Sloped</option>
+                  <option value="rocky">Rocky / Hard Soil</option>
+                </select>
+              </div>
+            </div>
+            <div class="section-divider"><span>Labour Details</span></div>
+            <div class="form-grid">
+              <div class="form-group"><label>No. of Labourers</label><input type="number" id="c-workers" value="6" min="1" max="200"/></div>
+              <div class="form-group"><label>Working Hours / Day</label><input type="number" id="c-hours" value="8" min="4" max="12"/></div>
+              <div class="form-group"><label>Daily Wage / Labourer (₹)</label><input type="number" id="c-wage" value="600" min="200" max="3000" step="50"/></div>
+              <div class="form-group"><label>Estimated Work Days</label><input type="number" id="c-days" value="120" min="1" max="1000"/></div>
+            </div>
+            <button class="estimate-btn amber" onclick="calcConstruction()">&#9654; Calculate Construction Cost</button>
+            <div class="result-box" id="c-result-box">
+              <div class="result-main" id="c-res-total">—</div>
+              <div class="result-meta" id="c-res-meta">—</div>
+              <div class="result-row">
+                <div class="result-chip">Material: <span id="c-res-mat">—</span></div>
+                <div class="result-chip">Labour: <span id="c-res-lab">—</span></div>
+                <div class="result-chip">Duration: <span id="c-res-dur">—</span> days</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Cost Breakdown</div><div class="panel-tag">Category Split</div></div>
+          <div class="panel-body">
+            <table class="breakdown-table">
+              <tr><td>Foundation & Structure</td><td id="c-bd-structure">—</td></tr>
+              <tr><td>Brickwork & Masonry</td><td id="c-bd-masonry">—</td></tr>
+              <tr><td>Roofing & Flooring</td><td id="c-bd-roofing">—</td></tr>
+              <tr><td>Doors & Windows</td><td id="c-bd-doors">—</td></tr>
+              <tr><td>Electrical & Plumbing</td><td id="c-bd-mep">—</td></tr>
+              <tr><td>Finishing & Painting</td><td id="c-bd-finishing">—</td></tr>
+              <tr><td>Labour (actual)</td><td id="c-bd-labour">—</td></tr>
+              <tr class="total-row"><td>Total Estimate</td><td id="c-bd-total">—</td></tr>
+            </table>
+            <div class="section-divider" style="margin-top:1.25rem;"><span>Distribution</span></div>
+            <div class="bar-list" id="c-bar-list"><div class="empty-msg">Run an estimate to see distribution.</div></div>
+            <p class="footnote">* Material rates based on 2024–25 Indian market. Labour cost calculated from your actual inputs above.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Cost Distribution</div><div class="panel-tag">Donut Chart</div></div>
+          <div class="panel-body"><div class="chart-wrap"><canvas id="c-donut"></canvas></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Construction History</div><div class="panel-tag">This Session</div></div>
+          <div class="panel-body" style="padding:0;">
+            <table class="history-table">
+              <thead><tr><th>#</th><th>Type</th><th>Area</th><th>Workers</th><th>Total</th></tr></thead>
+              <tbody id="c-history"><tr><td colspan="5" class="empty-msg">No estimates yet.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TAB 2: PAINTING & REPAIR ===== -->
+    <div class="tab-content" id="tab-repair">
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Painting & Repair Estimator</div>
+            <div class="panel-tag blue">Work Parameters</div>
+          </div>
+          <div class="panel-body">
+
+            <div class="section-divider"><span>Work Category</span></div>
+            <div class="form-grid">
+              <div class="form-group"><label>Work Category</label>
+                <select id="r-category" onchange="toggleRepairFields()">
+                  <option value="painting">Painting Only</option>
+                  <option value="repair">Repair Only</option>
+                  <option value="both">Painting + Repair</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Number of Rooms</label><input type="number" id="r-rooms" value="3" min="1" max="50"/></div>
+              <div class="form-group"><label>Room Size</label>
+                <select id="r-roomsize">
+                  <option value="80">Small (~80 sqft)</option>
+                  <option value="150" selected>Medium (~150 sqft)</option>
+                  <option value="275">Large (~275 sqft)</option>
+                  <option value="400">Extra Large (~400 sqft)</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Surface Condition</label>
+                <select id="r-surface">
+                  <option value="new">New / Good</option>
+                  <option value="worn">Worn / Needs prep</option>
+                  <option value="damaged">Damaged / Peeling</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- PAINTING FIELDS -->
+            <div id="r-paint-section">
+              <div class="section-divider"><span>Paint Details</span></div>
+              <div class="form-grid">
+                <div class="form-group"><label>Paint Type</label>
+                  <select id="r-painttype" onchange="updatePaintInfo()">
+                    <option value="distemper">Distemper</option>
+                    <option value="emulsion_interior">Interior Emulsion</option>
+                    <option value="emulsion_exterior">Exterior Emulsion / Weather Coat</option>
+                    <option value="enamel">Enamel (wood & metal)</option>
+                    <option value="texture">Texture Paint (decorative)</option>
+                    <option value="primer">Primer Only</option>
+                    <option value="epoxy">Epoxy Paint (floor/garage)</option>
+                  </select>
+                </div>
+                <div class="form-group"><label>Paint Brand</label>
+                  <select id="r-brand" onchange="updatePaintInfo()">
+                    <option value="local">Local / Unbranded</option>
+                    <option value="asian">Asian Paints</option>
+                    <option value="berger">Berger Paints</option>
+                    <option value="nerolac">Nerolac</option>
+                    <option value="dulux">Dulux (AkzoNobel)</option>
+                    <option value="indigo">Indigo Paints</option>
+                    <option value="jk">JK Cement Paints</option>
+                  </select>
+                </div>
+                <div class="form-group"><label>Paint Finish</label>
+                  <select id="r-finish" onchange="updatePaintInfo()">
+                    <option value="matte">Matte / Flat</option>
+                    <option value="satin">Satin</option>
+                    <option value="semi_gloss">Semi-Gloss</option>
+                    <option value="gloss">Full Gloss</option>
+                  </select>
+                </div>
+                <div class="form-group"><label>Number of Coats</label>
+                  <select id="r-coats">
+                    <option value="1">1 Coat</option>
+                    <option value="2" selected>2 Coats (standard)</option>
+                    <option value="3">3 Coats (premium)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Paint info card -->
+              <div class="paint-info visible" id="paint-info-card">
+                <div class="paint-info-title">Paint Info (auto-updated)</div>
+                <div class="paint-info-row">Price per litre <span id="pi-price">—</span></div>
+                <div class="paint-info-row">Coverage per litre <span id="pi-coverage">~10–12 sqft / litre</span></div>
+                <div class="paint-info-row">Recommended for <span id="pi-use">—</span></div>
+                <div class="paint-info-row">Finish level <span id="pi-finish">—</span></div>
+              </div>
+            </div>
+
+            <!-- REPAIR FIELDS -->
+            <div id="r-repair-section" style="display:none;">
+              <div class="section-divider"><span>Repair Details</span></div>
+              <div class="form-grid">
+                <div class="form-group"><label>Repair Type</label>
+                  <select id="r-repairtype">
+                    <option value="tile">Tile Fixing / Replacement</option>
+                    <option value="crack">Wall Crack Repair</option>
+                    <option value="plumbing">Plumbing Leak Fix</option>
+                    <option value="electrical">Electrical Socket / Switch</option>
+                    <option value="false_ceiling">False Ceiling Repair</option>
+                    <option value="waterproof">Waterproofing</option>
+                    <option value="flooring">Flooring Re-polish</option>
+                    <option value="grout">Re-grouting Tiles</option>
+                  </select>
+                </div>
+                <div class="form-group"><label>Damage Extent</label>
+                  <select id="r-extent">
+                    <option value="minor">Minor (1–2 spots)</option>
+                    <option value="moderate">Moderate (few areas)</option>
+                    <option value="major">Major (entire room)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- LABOUR DETAILS -->
+            <div class="section-divider"><span>Labour Details</span></div>
+            <div class="form-grid">
+              <div class="form-group"><label>No. of Painters / Workers</label><input type="number" id="r-workers" value="2" min="1" max="50"/></div>
+              <div class="form-group"><label>Working Hours / Day</label><input type="number" id="r-hours" value="8" min="4" max="12"/></div>
+              <div class="form-group"><label>Daily Wage / Worker (₹)</label><input type="number" id="r-wage" value="500" min="200" max="2000" step="50"/></div>
+              <div class="form-group"><label>City / Location</label>
+                <select id="r-location">
+                  <option value="metro">Metro City</option>
+                  <option value="tier2">Tier-2 City</option>
+                  <option value="tier3">Tier-3 / Rural</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="estimate-btn blue-btn" onclick="calcRepair()">&#9654; Calculate Painting & Repair Cost</button>
+
+            <div class="result-box" id="r-result-box">
+              <div class="result-main blue" id="r-res-total">—</div>
+              <div class="result-meta" id="r-res-meta">—</div>
+              <div class="result-row">
+                <div class="result-chip">Paint Material: <span id="r-res-paint">—</span></div>
+                <div class="result-chip">Labour: <span id="r-res-lab">—</span></div>
+                <div class="result-chip">Primer+Putty: <span id="r-res-primer">—</span></div>
+                <div class="result-chip">Est. Days: <span id="r-res-dur">—</span></div>
+              </div>
+            </div>
+
+            <!-- Labour summary box -->
+            <div class="labour-box" id="r-labour-box">
+              <div class="paint-info-title">Labour Summary</div>
+              <div class="labour-grid">
+                <div class="labour-chip">Workers<span id="lb-workers">—</span></div>
+                <div class="labour-chip">Hours/day<span id="lb-hours">—</span></div>
+                <div class="labour-chip">Daily wage<span id="lb-wage">—</span></div>
+                <div class="labour-chip">Total labour cost<span id="lb-total">—</span></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Work Breakdown</div><div class="panel-tag blue">Category Split</div></div>
+          <div class="panel-body">
+            <table class="breakdown-table">
+              <tr><td>Paint Material Cost</td><td id="r-bd-paint">—</td></tr>
+              <tr><td>Primer & Wall Putty</td><td id="r-bd-primer">—</td></tr>
+              <tr><td>Surface Preparation</td><td id="r-bd-prep">—</td></tr>
+              <tr><td>Labour (actual)</td><td id="r-bd-labour">—</td></tr>
+              <tr><td id="r-bd-repair-label">Repair Materials</td><td id="r-bd-repair">—</td></tr>
+              <tr><td>Tools & Miscellaneous</td><td id="r-bd-misc">—</td></tr>
+              <tr class="total-row blue"><td>Total Estimate</td><td id="r-bd-total">—</td></tr>
+            </table>
+            <div class="section-divider" style="margin-top:1.25rem;"><span>Distribution</span></div>
+            <div class="bar-list" id="r-bar-list"><div class="empty-msg">Run an estimate to see distribution.</div></div>
+            <p class="footnote">* Paint price per litre sourced from 2024–25 Indian market rates. Labour cost calculated from your actual worker inputs.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Cost Distribution</div><div class="panel-tag blue">Donut Chart</div></div>
+          <div class="panel-body"><div class="chart-wrap"><canvas id="r-donut"></canvas></div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Painting & Repair History</div><div class="panel-tag blue">This Session</div></div>
+          <div class="panel-body" style="padding:0;">
+            <table class="history-table">
+              <thead><tr><th>#</th><th>Category</th><th>Brand</th><th>Workers</th><th>Total</th></tr></thead>
+              <tbody id="r-history"><tr><td colspan="5" class="empty-msg">No estimates yet.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ─── PAINT DATABASE ───────────────────────────────────────
+// pricePerLitre by brand × paintType, coverage sqft/litre, finish info
+const PAINT_DB = {
+  distemper:           { base:45,  coverage:14, use:'Interior walls (budget)',          finish:'Chalky matte' },
+  emulsion_interior:   { base:90,  coverage:11, use:'Interior walls & ceilings',        finish:'Smooth matte to satin' },
+  emulsion_exterior:   { base:110, coverage:10, use:'Exterior walls, weather resistant',finish:'Flat / satin' },
+  enamel:              { base:120, coverage:9,  use:'Wood doors, grills, metal surfaces',finish:'High gloss' },
+  texture:             { base:180, coverage:6,  use:'Feature walls, decorative surfaces',finish:'3D textured' },
+  primer:              { base:55,  coverage:12, use:'Base coat before painting',         finish:'Flat (undercoat)' },
+  epoxy:               { base:250, coverage:8,  use:'Floors, garages, industrial',       finish:'Hard gloss' },
+};
+const BRAND_MULT = { local:0.70, asian:1.0, berger:0.95, nerolac:0.92, dulux:1.25, indigo:1.05, jk:0.85 };
+const BRAND_NAMES = { local:'Local Brand', asian:'Asian Paints', berger:'Berger', nerolac:'Nerolac', dulux:'Dulux', indigo:'Indigo', jk:'JK Paints' };
+const FINISH_MULT = { matte:1.0, satin:1.1, semi_gloss:1.15, gloss:1.22 };
+const FINISH_NAMES = { matte:'Matte / Flat', satin:'Satin sheen', semi_gloss:'Semi-gloss', gloss:'Full gloss' };
+
+// ─── HELPERS ─────────────────────────────────────────────
+function formatINR(n){
+  if(n>=10000000) return '₹'+(n/10000000).toFixed(2)+' Cr';
+  if(n>=100000)   return '₹'+(n/100000).toFixed(2)+' L';
+  return '₹'+Math.round(n).toLocaleString('en-IN');
+}
+function fShort(n){ return formatINR(n).replace('₹',''); }
+function g(id){ return document.getElementById(id); }
+
+// ─── TAB SWITCH ──────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-pill').forEach(p=>p.classList.remove('active'));
+  g('tab-'+tab).classList.add('active');
+  g('pill-'+tab).classList.add('active');
+  g('topbar-page').textContent = tab==='construction' ? 'Construction Estimator' : 'Painting & Repair Estimator';
+}
+
+// ─── TOGGLE REPAIR FIELDS ────────────────────────────────
+function toggleRepairFields(){
+  const cat = g('r-category').value;
+  g('r-paint-section').style.display  = (cat==='repair')   ? 'none' : 'block';
+  g('r-repair-section').style.display = (cat==='painting') ? 'none' : 'block';
+}
+
+// ─── UPDATE PAINT INFO CARD ──────────────────────────────
+function updatePaintInfo(){
+  const ptype  = g('r-painttype').value;
+  const brand  = g('r-brand').value;
+  const finish = g('r-finish').value;
+  const db     = PAINT_DB[ptype];
+  const price  = Math.round(db.base * BRAND_MULT[brand] * FINISH_MULT[finish]);
+  g('pi-price').textContent    = '₹'+price+' / litre';
+  g('pi-coverage').textContent = '~'+db.coverage+' sqft per litre (1 coat)';
+  g('pi-use').textContent      = db.use;
+  g('pi-finish').textContent   = FINISH_NAMES[finish]+' — '+db.finish;
+}
+updatePaintInfo();
+
+// ─── GLOBAL STATS ────────────────────────────────────────
+let allHistory=[], cJobCount=0, rJobCount=0;
+let lowVal=Infinity, highVal=0;
+let cDonut=null, rDonut=null;
+
+function updateStats(total, isCon){
+  allHistory.push(total);
+  if(isCon) cJobCount++; else rJobCount++;
+  if(total<lowVal){ lowVal=total; g('stat-low').textContent=fShort(total); }
+  if(total>highVal){ highVal=total; g('stat-high').textContent=fShort(total); }
+  g('stat-count').textContent = String(allHistory.length).padStart(2,'0');
+  g('stat-con').textContent   = String(cJobCount).padStart(2,'0');
+  g('stat-rep').textContent   = String(rJobCount).padStart(2,'0');
+}
+
+// ─── CONSTRUCTION CALC ───────────────────────────────────
+const C_PORTIONS = {structure:0.28,masonry:0.15,roofing:0.12,doors:0.08,mep:0.15,finishing:0.12};
+const C_LABELS   = ['Foundation & Structure','Brickwork','Roofing & Flooring','Doors & Windows','Electrical & Plumbing','Finishing','Labour'];
+const C_COLORS   = ['#c9820a','#7a8a8f','#5ab882','#e8a020','#9ab0b6','#b57a12','#6b8c7a'];
+
+function calcConstruction(){
+  const type    = g('c-type').value;
+  const area    = parseFloat(g('c-area').value)||1200;
+  const floors  = parseInt(g('c-floors').value)||1;
+  const loc     = g('c-location').value;
+  const struct  = g('c-structure').value;
+  const fin     = g('c-finishing').value;
+  const mep     = g('c-mep').value;
+  const site    = g('c-site').value;
+  const workers = parseInt(g('c-workers').value)||6;
+  const hours   = parseFloat(g('c-hours').value)||8;
+  const wage    = parseFloat(g('c-wage').value)||600;
+  const days    = parseInt(g('c-days').value)||120;
+
+  const base   = {residential:1600,commercial:2000,villa:2800,apartment:1800,warehouse:1200}[type];
+  const lm     = {metro:1.2,tier2:1.0,tier3:0.85}[loc];
+  const sm     = {standard:1.0,premium:1.15,luxury:1.35}[struct];
+  const fm     = {basic:0.85,standard:1.0,premium:1.2,luxury:1.5}[fin];
+  const mm     = {basic:0.9,standard:1.0,premium:1.2}[mep];
+  const stm    = {normal:1.0,hilly:1.1,rocky:1.18}[site];
+
+  const totalArea   = area * floors;
+  const matRate     = Math.round(base * lm * sm * fm * mm * stm * 0.60);
+  const matCost     = totalArea * matRate;
+  const labourCost  = workers * wage * days;
+  const keys        = Object.keys(C_PORTIONS);
+  const costs       = {};
+  keys.forEach(k => costs[k] = matCost * C_PORTIONS[k]);
+  const total = matCost + labourCost;
+
+  // Result
+  g('c-result-box').classList.add('visible');
+  g('c-res-total').textContent = formatINR(total);
+  g('c-res-meta').textContent  = totalArea.toLocaleString()+' sq ft  ·  '+workers+' workers  ·  '+days+' days';
+  g('c-res-mat').textContent   = formatINR(matCost);
+  g('c-res-lab').textContent   = formatINR(labourCost);
+  g('c-res-dur').textContent   = days;
+
+  // Breakdown
+  g('c-bd-structure').textContent = formatINR(costs.structure);
+  g('c-bd-masonry').textContent   = formatINR(costs.masonry);
+  g('c-bd-roofing').textContent   = formatINR(costs.roofing);
+  g('c-bd-doors').textContent     = formatINR(costs.doors);
+  g('c-bd-mep').textContent       = formatINR(costs.mep);
+  g('c-bd-finishing').textContent = formatINR(costs.finishing);
+  g('c-bd-labour').textContent    = formatINR(labourCost);
+  g('c-bd-total').textContent     = formatINR(total);
+
+  // Bars
+  const allCosts = [...keys.map(k=>costs[k]), labourCost];
+  const bl = g('c-bar-list'); bl.innerHTML='';
+  C_LABELS.forEach((lbl,i)=>{
+    const pct = Math.round((allCosts[i]/total)*100);
+    bl.innerHTML+=`<div class="bar-item"><div class="bar-meta"><span>${lbl}</span><span>${pct}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${C_COLORS[i]}"></div></div></div>`;
+  });
+
+  // Donut
+  const chartData = [...keys.map(k=>Math.round(costs[k])), Math.round(labourCost)];
+  if(cDonut){cDonut.data.datasets[0].data=chartData;cDonut.update();}
+  else{
+    cDonut=new Chart(g('c-donut').getContext('2d'),{type:'doughnut',data:{labels:C_LABELS,datasets:[{data:chartData,backgroundColor:C_COLORS,borderWidth:2,borderColor:'#2c271c'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{color:'#a09880',font:{size:11,family:'DM Sans'},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>' '+formatINR(c.raw)}}}}});
+  }
+
+  // History
+  const typeLabel={residential:'Residential',commercial:'Commercial',villa:'Villa',apartment:'Apartment',warehouse:'Warehouse'}[type];
+  const badgeMap={residential:'b-res',commercial:'b-com',villa:'b-vil',apartment:'b-paint',warehouse:'b-com'}[type];
+  cJobCount++;
+  const tbody=g('c-history');
+  if(tbody.querySelector('.empty-msg')) tbody.innerHTML='';
+  tbody.innerHTML=`<tr><td style="color:var(--text3)">${cJobCount}</td><td><span class="badge ${badgeMap}">${typeLabel}</span></td><td>${totalArea.toLocaleString()} sqft</td><td>${workers}w / ${days}d</td><td class="td-hl">${formatINR(total)}</td></tr>`+tbody.innerHTML;
+
+  updateStats(total,true);
+}
+
+// ─── PAINTING & REPAIR CALC ──────────────────────────────
+const R_LABELS = ['Paint Material','Primer & Putty','Surface Prep','Labour','Repair Materials','Tools & Misc'];
+const R_COLORS = ['#2563a8','#70a8e0','#5ab882','#9ab0b6','#e8a020','#7a8a8f'];
+
+function calcRepair(){
+  const cat       = g('r-category').value;
+  const rooms     = parseInt(g('r-rooms').value)||3;
+  const sqftRoom  = parseInt(g('r-roomsize').value)||150;
+  const surface   = g('r-surface').value;
+  const ptype     = g('r-painttype').value;
+  const brand     = g('r-brand').value;
+  const finish    = g('r-finish').value;
+  const coats     = parseInt(g('r-coats').value)||2;
+  const repairType= g('r-repairtype').value;
+  const extent    = g('r-extent') ? g('r-extent').value : 'moderate';
+  const workers   = parseInt(g('r-workers').value)||2;
+  const hours     = parseFloat(g('r-hours').value)||8;
+  const wage      = parseFloat(g('r-wage').value)||500;
+  const loc       = g('r-location').value;
+
+  const locMult   = {metro:1.2, tier2:1.0, tier3:0.82}[loc];
+  const surfMult  = {new:0.9, worn:1.1, damaged:1.3}[surface];
+  const totalSqft = rooms * sqftRoom;
+
+  // Paint material cost
+  let paintCost = 0;
+  if(cat==='painting'||cat==='both'){
+    const db         = PAINT_DB[ptype];
+    const pricePerL  = db.base * BRAND_MULT[brand] * FINISH_MULT[finish];
+    const litresNeeded = (totalSqft / db.coverage) * coats * surfMult;
+    paintCost = litresNeeded * pricePerL * locMult;
+  }
+
+  // Repair material cost
+  const repairBase = {tile:4500, crack:1200, plumbing:2000, electrical:1500, false_ceiling:5000, waterproof:6000, flooring:3500, grout:1800}[repairType]||2000;
+  const extentMult = {minor:0.6, moderate:1.0, major:1.8}[extent];
+  let repairMat = 0;
+  if(cat==='repair'||cat==='both') repairMat = repairBase * rooms * extentMult * locMult;
+
+  // Primer & putty
+  const primerCost = (cat!=='repair') ? (totalSqft * 8 * locMult) : 0;
+
+  // Surface prep
+  const prepCost = totalSqft * 5 * surfMult * locMult;
+
+  // Labour — actual calculation
+  const estDays   = Math.max(1, Math.ceil((totalSqft/200)*coats*(cat==='both'?1.5:1)));
+  const labourCost= workers * wage * estDays;
+
+  // Tools & misc
+  const miscCost = (paintCost + repairMat) * 0.05 + 200;
+
+  const total = paintCost + primerCost + prepCost + labourCost + repairMat + miscCost;
+
+  // Result box
+  g('r-result-box').classList.add('visible');
+  g('r-res-total').textContent  = formatINR(total);
+  g('r-res-meta').textContent   = `${rooms} room(s)  ·  ~${totalSqft.toLocaleString()} sq ft  ·  ${coats} coat(s)  ·  ${workers} worker(s)`;
+  g('r-res-paint').textContent  = formatINR(paintCost);
+  g('r-res-lab').textContent    = formatINR(labourCost);
+  g('r-res-primer').textContent = formatINR(primerCost);
+  g('r-res-dur').textContent    = estDays+' day(s)';
+
+  // Labour summary box
+  g('r-labour-box').classList.add('visible');
+  g('lb-workers').textContent = workers+' painters';
+  g('lb-hours').textContent   = hours+' hrs';
+  g('lb-wage').textContent    = '₹'+wage.toLocaleString()+'/day';
+  g('lb-total').textContent   = formatINR(labourCost);
+
+  // Breakdown
+  const repairLabel = {tile:'Tile Material',crack:'Crack Filler',plumbing:'Pipe/Fittings',electrical:'Wiring/Switches',false_ceiling:'Ceiling Board',waterproof:'WP Chemical',flooring:'Polish Material',grout:'Grout Material'}[repairType]||'Repair Materials';
+  g('r-bd-repair-label').textContent = repairLabel;
+  g('r-bd-paint').textContent   = formatINR(paintCost);
+  g('r-bd-primer').textContent  = formatINR(primerCost);
+  g('r-bd-prep').textContent    = formatINR(prepCost);
+  g('r-bd-labour').textContent  = formatINR(labourCost);
+  g('r-bd-repair').textContent  = formatINR(repairMat);
+  g('r-bd-misc').textContent    = formatINR(miscCost);
+  g('r-bd-total').textContent   = formatINR(total);
+
+  // Bars
+  const costs=[paintCost,primerCost,prepCost,labourCost,repairMat,miscCost];
+  const bl=g('r-bar-list'); bl.innerHTML='';
+  R_LABELS.forEach((lbl,i)=>{
+    const pct=total>0?Math.round((costs[i]/total)*100):0;
+    bl.innerHTML+=`<div class="bar-item"><div class="bar-meta"><span>${lbl}</span><span>${pct}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${R_COLORS[i]}"></div></div></div>`;
+  });
+
+  // Donut
+  const chartData=costs.map(c=>Math.round(c));
+  if(rDonut){rDonut.data.datasets[0].data=chartData;rDonut.update();}
+  else{
+    rDonut=new Chart(g('r-donut').getContext('2d'),{type:'doughnut',data:{labels:R_LABELS,datasets:[{data:chartData,backgroundColor:R_COLORS,borderWidth:2,borderColor:'#2c271c'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{color:'#a09880',font:{size:11,family:'DM Sans'},boxWidth:10,padding:8}},tooltip:{callbacks:{label:c=>' '+formatINR(c.raw)}}}}});
+  }
+
+  // History
+  const catLabel={painting:'Painting',repair:'Repair',both:'Paint+Repair'}[cat];
+  rJobCount++;
+  const tbody=g('r-history');
+  if(tbody.querySelector('.empty-msg')) tbody.innerHTML='';
+  tbody.innerHTML=`<tr><td style="color:var(--text3)">${rJobCount}</td><td><span class="badge ${cat==='painting'?'b-paint':'b-repair'}">${catLabel}</span></td><td>${BRAND_NAMES[brand]||'—'}</td><td>${workers}w / ${estDays}d</td><td class="td-hl-blue">${formatINR(total)}</td></tr>`+tbody.innerHTML;
+
+  updateStats(total,false);
+}
+</script>
+</body>
+</html>
