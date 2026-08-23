@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NALAM — Patient-Controlled Healthcare Data & Prescription Intelligence</title>
+    <!-- Google Fonts & Chart.js -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=2.0.0">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <span class="logo-symbol">✦</span>
+                <div class="logo-text">
+                    <h1>NALAM</h1>
+                    <p>Your Data. Your Consent. Smarter Healthcare.</p>
+                </div>
+            </div>
+            <nav class="nav-links">
+                <a href="#" class="nav-link active" data-target="home-section">Home</a>
+                <a href="#" class="nav-link hidden" id="link-patient" data-target="patient-section">Patient Portal</a>
+                <a href="#" class="nav-link hidden" id="link-doctor" data-target="doctor-section">Doctor Portal</a>
+                <a href="#" class="nav-link" data-target="insights-section">ML Insights</a>
+                <a href="#" class="nav-link" data-target="emergency-section">Emergency View</a>
+                <span id="nav-username" class="nav-user-label"></span>
+                <button id="btn-logout" class="btn btn-outline btn-sm hidden" style="margin-left: 0.5rem;">Logout</button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container main-content">
+        <!-- ================= HOME SECTION (HACKATHON OVERVIEW & AUTH) ================= -->
+        <section id="home-section" class="tab-content active">
+            <div class="home-grid">
+                <div class="welcome-text" style="align-self: center;">
+                    <span class="badge">Innovation Prototype</span>
+                    <h2 class="hero-title">Weightless, Patient-Owned Medical Vault</h2>
+                    <p class="hero-desc">
+                        NALAM is an intelligent, patient-controlled healthcare data vault built for the <strong>MathX Innovation Hackathon</strong>. It locks clinical data behind granular consent configurations and generates dynamic OTP handshakes, while analyzing safety metrics with twin machine learning algorithms (Logistic Regression and Isolation Forests).
+                    </p>
+                </div>
+                
+                <div class="card auth-card">
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" id="tab-login-btn">Log In</button>
+                        <button class="auth-tab" id="tab-register-btn">Sign Up</button>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <form id="login-form" class="auth-form active">
+                        <div class="form-group">
+                            <label for="login-email">Email Address</label>
+                            <input type="email" id="login-email" placeholder="patient@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" placeholder="••••••••" required>
+                        </div>
+                        <button type="submit" class="btn btn-teal full-width">Sign In</button>
+                    </form>
+                    
+                    <!-- Register Form -->
+                    <form id="register-form" class="auth-form">
+                        <div class="form-group">
+                            <label for="reg-username">Username</label>
+                            <input type="text" id="reg-username" placeholder="johndoe" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-email">Email Address</label>
+                            <input type="email" id="reg-email" placeholder="john@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-password">Password</label>
+                            <input type="password" id="reg-password" placeholder="••••••••" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-role">Role</label>
+                            <select id="reg-role" required>
+                                <option value="Patient">Patient</option>
+                                <option value="Doctor">Doctor</option>
+                            </select>
+                        </div>
+                        
+                        <div id="patient-only-fields" class="form-row-nested">
+                            <div class="form-group">
+                                <label for="reg-age">Age</label>
+                                <input type="number" id="reg-age" value="30" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-gender">Gender</label>
+                                <select id="reg-gender">
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-blood">Blood Group</label>
+                                <input type="text" id="reg-blood" value="O+">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-teal full-width">Create Account</button>
+                    </form>
+
+                    <div class="demo-logins">
+                        <h3>Instant Demonstration Access</h3>
+                        <p class="demo-sub" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.8rem;">Click below to bypass auth and log in as pre-seeded identities:</p>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <button id="btn-login-patient" class="btn btn-primary btn-sm full-width">
+                                👤 Log in as Patient (John Doe)
+                            </button>
+                            <button id="btn-login-doctor" class="btn btn-outline btn-sm full-width">
+                                🩺 Log in as Doctor (Dr. Sarah Smith)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= PATIENT SECTION ================= -->
+        <section id="patient-section" class="tab-content">
+            <div class="portal-header">
+                <h2>Patient Secure Medical Dashboard</h2>
+                <div class="patient-id-card">
+                    Patient Name: <span id="pat-card-name">--</span> | Age: <span id="pat-card-age">--</span> | Gender: <span id="pat-card-gender">--</span> | Blood Group: <span id="pat-card-blood">--</span>
+                </div>
+            </div>
+            
+            <div class="grid-3">
+                <div class="summary-card">
+                    <span class="summary-icon">💊</span>
+                    <div class="summary-info">
+                        <span class="summary-val" id="pat-stat-meds">0</span>
+                        <span class="summary-lbl">Active Medications</span>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-icon">📊</span>
+                    <div class="summary-info">
+                        <span class="summary-val" id="pat-stat-adherence">0%</span>
+                        <span class="summary-lbl">Adherence Rate</span>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <span class="summary-icon">🕒</span>
+                    <div class="summary-info">
+                        <span class="summary-val" id="pat-stat-refill">--</span>
+                        <span class="summary-lbl">Next Critical Refill</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Left Column: Medical Records & Refills -->
+                <div class="vault-column">
+                    <div class="card">
+                        <div class="card-header border-b">
+                            <h3>Secure Medical Vault</h3>
+                        </div>
+                        
+                        <div class="vault-tabs">
+                            <button class="vault-tab-btn active" data-tab="tab-prescriptions">Prescriptions</button>
+                            <button class="vault-tab-btn" data-tab="tab-refills">Refill Countdown</button>
+                            <button class="vault-tab-btn" data-tab="tab-history">Allergies & History</button>
+                            <button class="vault-tab-btn" data-tab="tab-finder">Doctor Finder</button>
+                        </div>
+                        
+                        <!-- Vault Content: Prescriptions -->
+                        <div id="tab-prescriptions" class="vault-tab-content active">
+                            <div class="flex-between header-row">
+                                <h4>Prescription Ledger</h4>
+                                <button class="btn btn-teal btn-sm" id="btn-add-prescription-modal">＋ Add Prescription</button>
+                            </div>
+                            <div id="prescription-list" class="prescription-list">
+                                <!-- Loaded dynamically -->
+                                <p class="muted">No prescriptions recorded in your medical ledger.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Vault Content: Refills -->
+                        <div id="tab-refills" class="vault-tab-content">
+                            <h4>Medication Supply Predictor</h4>
+                            <p class="muted-small" style="margin-bottom: 1rem;">Direct mathematical estimation mapping: <code>Days Left = Quantity Remaining / Daily Dosage</code></p>
+                            <div class="refill-table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Medicine</th>
+                                            <th>Remaining</th>
+                                            <th>Daily Dosage</th>
+                                            <th>Days Left</th>
+                                            <th>Refill Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="refill-list">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Vault Content: Allergies & History -->
+                        <div id="tab-history" class="vault-tab-content">
+                            <div class="grid-2">
+                                <div>
+                                    <h4>Recorded Allergies</h4>
+                                    <ul class="badge-list" id="allergy-list">
+                                        <!-- Loaded dynamically -->
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4>Chronic Conditions</h4>
+                                    <ul class="badge-list" id="chronic-list">
+                                        <!-- Loaded dynamically -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vault Content: Doctor Finder (NEW Slider Widget) -->
+                        <div id="tab-finder" class="vault-tab-content">
+                            <div class="header-row">
+                                <h4>Futuristic Doctor Finder Engine</h4>
+                                <p class="muted-small">Ranks recommended care options dynamically using live weighted scores: <code>Score = w₁A + w₂D + w₃S + w₄R</code></p>
+                            </div>
+                            <div class="finder-layout">
+                                <div class="finder-controls">
+                                    <div class="form-group">
+                                        <label for="finder-specialty">Select Medical Specialty (S)</label>
+                                        <select id="finder-specialty">
+                                            <option value="Cardiology">Cardiology</option>
+                                            <option value="Neurology">Neurology</option>
+                                            <option value="Paediatrics">Paediatrics</option>
+                                            <option value="General Practice">General Practice</option>
+                                            <option value="Dermatology">Dermatology</option>
+                                        </select>
+                                    </div>
+                                    <div class="weight-sliders">
+                                        <div class="slider-group">
+                                            <div class="slider-header">
+                                                <span>Availability Weight (w₁)</span>
+                                                <span id="val-w1">0.25</span>
+                                            </div>
+                                            <input type="range" id="slider-w1" min="0" max="1" step="0.05" value="0.25">
+                                        </div>
+                                        <div class="slider-group">
+                                            <div class="slider-header">
+                                                <span>Distance Weight (w₂)</span>
+                                                <span id="val-w2">0.25</span>
+                                            </div>
+                                            <input type="range" id="slider-w2" min="0" max="1" step="0.05" value="0.25">
+                                        </div>
+                                        <div class="slider-group">
+                                            <div class="slider-header">
+                                                <span>Specialty Match Weight (w₃)</span>
+                                                <span id="val-w3">0.25</span>
+                                            </div>
+                                            <input type="range" id="slider-w3" min="0" max="1" step="0.05" value="0.25">
+                                        </div>
+                                        <div class="slider-group">
+                                            <div class="slider-header">
+                                                <span>Requirement Match Weight (w₄)</span>
+                                                <span id="val-w4">0.25</span>
+                                            </div>
+                                            <input type="range" id="slider-w4" min="0" max="1" step="0.05" value="0.25">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="finder-results">
+                                    <h5>Ranked Medical Providers</h5>
+                                    <div id="doctor-finder-list" class="doctor-list-cards">
+                                        <!-- Loaded dynamically in app.js -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Granular Consent Manager -->
+                    <div class="card margin-t">
+                        <div class="card-header border-b">
+                            <h3>Consent Access Manager</h3>
+                            <span class="badge" style="margin-top: 0.25rem;">Patient = Data Owner</span>
+                        </div>
+                        
+                        <!-- Pending requests -->
+                        <div class="pending-consents-section">
+                            <h4>Pending Doctor Access Requests</h4>
+                            <div id="pending-requests" class="pending-requests-list">
+                                <!-- Dynamic -->
+                                <p class="muted-small">No active pending data sharing requests.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Active consents -->
+                        <div class="active-consents-section margin-t">
+                            <h4>Active Clinical Authorizations</h4>
+                            <div id="active-consents" class="active-consents-list">
+                                <!-- Dynamic -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: ML Analysis & Chatbot -->
+                <div class="intelligence-column">
+                    <!-- ML Analysis Card -->
+                    <div class="card" id="risk-analysis-card">
+                        <div class="card-header border-b">
+                            <h3>Trained ML Prescription Risk Analysis</h3>
+                        </div>
+                        <div class="result-placeholder" id="risk-placeholder">
+                            <span class="placeholder-icon">🧠</span>
+                            <p>Select a prescription from your ledger or upload a new one to evaluate safety risk patterns.</p>
+                        </div>
+                        
+                        <div class="result-content hidden" id="risk-result">
+                            <div class="result-divider">━━━━━━━━━━━━━━━━━━━━</div>
+                            <div class="result-header">Predicted Medication Risk</div>
+                            <div class="risk-badge-large" id="risk-badge-label">--</div>
+                            
+                            <div class="result-metric-row">
+                                <div class="metric-box">
+                                    <span class="metric-lbl">Confidence:</span>
+                                    <span class="metric-num-small" id="risk-conf-val">0%</span>
+                                </div>
+                                <div class="metric-box">
+                                    <span class="metric-lbl">Anomaly Check:</span>
+                                    <span class="metric-num-small" id="anomaly-badge-val">Normal</span>
+                                </div>
+                            </div>
+                            <p class="clinical-disclaimer" id="risk-desc-text">--</p>
+                            
+                            <div class="result-divider">━━━━━━━━━━━━━━━━━━━━</div>
+                            
+                            <div class="math-analysis-details" style="width: 100%; text-align: left; margin: 0.8rem 0;">
+                                <h5 style="font-size: 0.8rem; margin-bottom: 0.4rem; font-weight: 700; color: var(--text-secondary);">MATHEMATICAL INSIGHTS</h5>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+                                    <div style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px;">
+                                        <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">Medication Adherence:</span>
+                                        <span id="ins-val-adherence" style="font-weight: 700; color: var(--color-primary); font-size: 1rem;">--%</span>
+                                    </div>
+                                    <div style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px;">
+                                        <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">Dosage Z-score:</span>
+                                        <span id="ins-val-dosage-z" style="font-weight: 700; color: var(--color-primary); font-size: 1rem;">--</span>
+                                    </div>
+                                    <div style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px;">
+                                        <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">Frequency Z-score:</span>
+                                        <span id="ins-val-freq-z" style="font-weight: 700; color: var(--color-primary); font-size: 1rem;">--</span>
+                                    </div>
+                                    <div style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 6px;">
+                                        <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">Interaction Score:</span>
+                                        <span id="ins-val-interactions" style="font-weight: 700; color: var(--color-primary); font-size: 1rem;">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="result-divider">━━━━━━━━━━━━━━━━━━━━</div>
+                            
+                            <div class="model-stats-details" style="width: 100%; text-align: left; margin: 0.8rem 0;">
+                                <h5 style="font-size: 0.8rem; margin-bottom: 0.4rem; font-weight: 700; color: var(--text-secondary);">MODEL PERFORMANCE</h5>
+                                <p style="font-size: 0.8rem; margin-bottom: 0.6rem;">
+                                    <strong>Accuracy:</strong> <span id="ins-val-accuracy" style="color: var(--color-primary); font-weight: 600;">--</span> | 
+                                    <strong>F1 Score:</strong> <span id="ins-val-f1" style="color: var(--color-primary); font-weight: 600;">--</span>
+                                </p>
+                                <h5 style="font-size: 0.75rem; margin-bottom: 0.4rem; font-weight: 600; color: var(--text-muted);">Feature Importance</h5>
+                                <div id="ins-val-importance-list" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                                    <!-- Dynamic horizontal bars -->
+                                </div>
+                            </div>
+                            
+                            <div class="result-divider">━━━━━━━━━━━━━━━━━━━━</div>
+                            
+                            <div class="signals-list">
+                                <h5>Explainable AI Contributions:</h5>
+                                <ul id="risk-signals-list" style="font-size: 0.75rem; list-style: none;">
+                                    <!-- Dynamic -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Local Chat Assistant -->
+                    <div class="card margin-t">
+                        <div class="card-header border-b">
+                            <h3>Context-Aware Health Assistant</h3>
+                            <span class="badge bg-orange" style="margin-top: 0.25rem;">⚠️ AI Advisor ≠ Doctor</span>
+                        </div>
+                        <div class="chat-container">
+                            <div class="chat-messages" id="chat-messages">
+                                <div class="message assistant">
+                                    <p>Hello! I am your secure local NALAM assistant. Ask me anything about your secure medical records (allergies, medications, chronic refills), or click a preset query below:</p>
+                                </div>
+                            </div>
+                            <div class="quick-queries" id="chat-quick-queries">
+                                <button class="quick-query-btn" data-query="What medicines am I currently taking?">💊 Active Medications</button>
+                                <button class="quick-query-btn" data-query="When is my next medication refill date?">🕒 Refill Countdown</button>
+                                <button class="quick-query-btn" data-query="Do I have any allergies logged?">⚠️ Allergies</button>
+                                <button class="quick-query-btn" data-query="Show my previous prescriptions.">📄 Prescriptions Ledger</button>
+                                <button class="quick-query-btn" data-query="Which specialist should I consult?">🩺 Specialty Finder</button>
+                            </div>
+                            <form id="chat-form" class="chat-input-row">
+                                <input type="text" id="chat-input" placeholder="Ask about allergies, refills, or medications..." required>
+                                <button type="submit" class="btn btn-teal">Send</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= DOCTOR SECTION ================= -->
+        <section id="doctor-section" class="tab-content">
+            <div class="portal-header">
+                <h2>Clinical Consent Portal & Prescription Console</h2>
+                <div class="doctor-id-card">
+                    Physician: <span id="doc-card-name">--</span> | Specialty: <span id="doc-card-specialty">--</span> | Affiliate: <span id="doc-card-hospital">--</span>
+                </div>
+            </div>
+
+            <!-- Visual 5-Step Consent Journey Banner -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="card-header">
+                    <h3>Interactive Consent Verification Journey</h3>
+                    <p>NALAM enforces strict patient data control. Doctors do not automatically see records. The consent lifecycle follows this timeline:</p>
+                </div>
+                <div class="consent-journey-timeline" id="consent-timeline">
+                    <div class="timeline-step" id="step-1">
+                        <div class="step-node">1</div>
+                        <div class="step-label">Doctor Request</div>
+                    </div>
+                    <div class="timeline-step" id="step-2">
+                        <div class="step-node">2</div>
+                        <div class="step-label">Patient Consent</div>
+                    </div>
+                    <div class="timeline-step" id="step-3">
+                        <div class="step-node">3</div>
+                        <div class="step-label">OTP Verification</div>
+                    </div>
+                    <div class="timeline-step" id="step-4">
+                        <div class="step-node">4</div>
+                        <div class="step-label">Records Unlocked</div>
+                    </div>
+                    <div class="timeline-step" id="step-5">
+                        <div class="step-node">5</div>
+                        <div class="step-label">Session Expired</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Left Column: Patient Search & Consent Status -->
+                <div class="doctor-control-panel">
+                    <div class="card">
+                        <div class="card-header border-b">
+                            <h3>Search Patient Database</h3>
+                        </div>
+                        <form id="doctor-search-form" class="search-form">
+                            <div class="form-group">
+                                <label for="search-patient-email">Enter Patient Email Address</label>
+                                <input type="email" id="search-patient-email" placeholder="patient@example.com" required>
+                            </div>
+                            <button type="submit" class="btn btn-teal full-width">Look Up Patient</button>
+                        </form>
+                        
+                        <!-- Search result & Access status -->
+                        <div id="search-result-card" class="search-result-card hidden">
+                            <div class="result-divider"></div>
+                            <h4>Patient Match Found</h4>
+                            <div class="patient-match-info" style="margin: 0.5rem 0; font-size: 0.8rem; line-height: 1.5;">
+                                <p><strong>Name:</strong> <span id="match-name">--</span></p>
+                                <p><strong>Email:</strong> <span id="match-email">--</span></p>
+                                <p><strong>Age:</strong> <span id="match-age">--</span></p>
+                            </div>
+                            
+                            <!-- Access request controls -->
+                            <div class="access-control-box margin-t">
+                                <span class="badge" id="consent-status-badge">No Active Consent</span>
+                                
+                                <div id="box-request-access" class="hidden">
+                                    <p class="muted-small margin-t">Request granular permissions to view John Doe's active profile.</p>
+                                    <button id="btn-request-access" class="btn btn-outline btn-sm full-width margin-t">Request Record Access</button>
+                                </div>
+                                
+                                <div id="box-verify-otp" class="hidden margin-t">
+                                    <p class="muted-small">Patient approved request. Enter authorization OTP code to unlock vault data:</p>
+                                    <div class="otp-input-row" style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                        <input type="text" id="otp-verify-code" placeholder="123456" maxlength="6" style="flex: 1;">
+                                        <button id="btn-verify-otp" class="btn btn-teal btn-sm">Verify</button>
+                                    </div>
+                                </div>
+                                
+                                <div id="box-authorized" class="hidden margin-t">
+                                    <p class="success-text" style="color: var(--color-success); font-weight: 700; font-size: 0.8rem;">✓ Granular access unlocked. Session expires in: <span id="access-expiry-countdown">15:00</span></p>
+                                    <button id="btn-doctor-view-vault" class="btn btn-teal full-width margin-t">Load Unlocked Records</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Patient Vault Info (If Authorized) -->
+                <div class="doctor-vault-panel">
+                    <div class="card placeholder-panel" id="doctor-vault-placeholder">
+                        <span class="placeholder-icon">🔒</span>
+                        <h3>Patient Vault Restricted</h3>
+                        <p>Search for a patient, initiate access request, and verify OTP to view allergies, medications, and prescription logs.</p>
+                    </div>
+                    
+                    <div class="doctor-vault-content hidden" id="doctor-vault-content">
+                        <!-- Granular Health Vault View -->
+                        <div class="card">
+                            <div class="card-header border-b flex-between">
+                                <h3>Patient Medical Profile (Authorized View)</h3>
+                                <button class="btn btn-outline btn-sm" id="btn-doctor-revoke-sim">Revoke Session</button>
+                            </div>
+                            
+                            <div class="vault-section margin-t">
+                                <h4>1. Medical History & Allergies</h4>
+                                <div class="grid-2 margin-t">
+                                    <div class="info-block" style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.8rem; border-radius: 8px;">
+                                        <h5 style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Allergies:</h5>
+                                        <div id="doc-patient-allergies" style="font-weight: 700; margin-top: 0.3rem;">--</div>
+                                    </div>
+                                    <div class="info-block" style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.8rem; border-radius: 8px;">
+                                        <h5 style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Chronic Conditions & Blood:</h5>
+                                        <div id="doc-patient-chronic" style="font-weight: 700; margin-top: 0.3rem;">--</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="vault-section margin-t border-t padding-t">
+                                <h4>2. Active Medications & Logs</h4>
+                                <div id="doc-patient-medications" class="margin-t" style="font-size: 0.85rem; line-height: 1.6;">
+                                    <!-- Dynamic -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Clinical Prescription Console -->
+                        <div class="card margin-t">
+                            <div class="card-header border-b">
+                                <h3>Clinical Prescription Console</h3>
+                                <p>Issue a new medication, running real-time ML risk evaluations before saving.</p>
+                            </div>
+                            
+                            <form id="doctor-prescription-form" class="prescription-form margin-t">
+                                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="doc-rx-med">Medicine Name</label>
+                                        <input type="text" id="doc-rx-med" placeholder="e.g. Lisinopril" required>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="doc-rx-dosage">Dosage (mg)</label>
+                                        <input type="number" id="doc-rx-dosage" placeholder="10" required>
+                                    </div>
+                                </div>
+                                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="doc-rx-freq">Frequency (Daily)</label>
+                                        <input type="number" id="doc-rx-freq" placeholder="1" required>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="doc-rx-duration">Duration (Days)</label>
+                                        <input type="number" id="doc-rx-duration" placeholder="30" required>
+                                    </div>
+                                </div>
+                                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="doc-rx-delay">Refill Delay (Days)</label>
+                                        <input type="number" id="doc-rx-delay" placeholder="1" required>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom: 0;">
+                                        <label for="doc-rx-yearly-freq">Refills / Year</label>
+                                        <input type="number" id="doc-rx-yearly-freq" placeholder="6" required>
+                                    </div>
+                                </div>
+                                
+                                <!-- Dynamic warning alert area -->
+                                <div id="doc-rx-warning-area" class="hidden" style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 0.8rem; border-radius: 8px; font-size: 0.75rem; margin: 0.8rem 0; font-weight: 600; text-align: left;">
+                                    <!-- Populated dynamically -->
+                                </div>
+
+                                <button type="submit" class="btn btn-teal full-width margin-t">Submit to Patient Vault</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= ML & MATHEMATICAL INSIGHTS SECTION ================= -->
+        <section id="insights-section" class="tab-content">
+            <!-- Header -->
+            <div class="portal-header" style="margin-bottom: 2rem;">
+                <h2>NALAM — Mathematical Insights & ML Core</h2>
+                <p style="color: #93c5fd; font-size: 1.05rem; margin-top: 0.2rem;">Model metrics details & Clinical simulation playground</p>
+            </div>
+
+            <!-- Two Column Interactive Playground Grid -->
+            <div class="dashboard-grid">
+                <!-- Left Column: Patient Input Form -->
+                <div class="doctor-control-panel">
+                    <div class="card">
+                        <div class="card-header border-b">
+                            <h3>Prescription Simulator Playground</h3>
+                            <p>Adjust clinical parameters to evaluate Logistic Regression decisions and Isolation Forest scores in real-time.</p>
+                        </div>
+                        <form id="play-input-form" class="prescription-form" style="padding: 0.5rem 0.2rem;">
+                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="play-age">Patient Age</label>
+                                    <input type="number" id="play-age" value="67" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="play-meds">Active Medications Count</label>
+                                    <input type="number" id="play-meds" value="8" required>
+                                </div>
+                            </div>
+                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="play-dosage">Prescribed Dosage (mg)</label>
+                                    <input type="number" id="play-dosage" value="1200" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="play-allergy">Allergy Profile Indicator</label>
+                                    <select id="play-allergy" required>
+                                        <option value="1" selected>Yes (Penicillin/Sulfa)</option>
+                                        <option value="0">No allergies</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="play-chronic">Chronic Disease Flag</label>
+                                    <select id="play-chronic" required>
+                                        <option value="1" selected>Yes (Hypertension/Diabetes)</option>
+                                        <option value="0">No chronic diseases</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="play-interactions">Active Interaction Count</label>
+                                    <input type="number" id="play-interactions" value="4" required>
+                                </div>
+                            </div>
+                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="play-adherence">Medication Adherence (%)</label>
+                                    <input type="number" id="play-adherence" value="62" min="0" max="100" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="play-delay">Refill Delay (Days)</label>
+                                    <input type="number" id="play-delay" value="10" required>
+                                </div>
+                            </div>
+                            <div class="form-row" style="margin-bottom: 0.8rem;">
+                                <div class="form-group" style="width: 100%;">
+                                    <label for="play-freq">Prescription Frequency (Refills/Year)</label>
+                                    <input type="number" id="play-freq" value="6" required>
+                                </div>
+                            </div>
+                            
+                            <!-- Presets -->
+                            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-play-load-low" style="flex: 1;">Load Low Risk Profile</button>
+                                <button type="button" class="btn btn-secondary btn-sm" id="btn-play-load-high" style="flex: 1;">Load High Risk Profile</button>
+                            </div>
+                            
+                            <!-- Analyze Action Button -->
+                            <button type="submit" class="btn btn-teal" style="width: 100%; margin-top: 1.2rem; font-weight: 700; font-size: 1.1rem; padding: 0.8rem;">
+                                [ ANALYZE PRESCRIPTION ]
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right Column: Outputs -->
+                <div class="intelligence-column">
+                    <!-- ML PREDICTION -->
+                    <div class="card">
+                        <div class="card-header border-b">
+                            <h3>Supervised ML Prediction Output</h3>
+                        </div>
+                        <div style="padding: 1.5rem; text-align: center;" id="play-pred-placeholder">
+                            <span style="font-size: 2rem;">🧠</span>
+                            <p class="muted-small" style="margin-top: 0.5rem;">Click Analyze to evaluate data with the trained model</p>
+                        </div>
+                        <div class="hidden" id="play-pred-card" style="padding: 1.5rem; text-align: center;">
+                            <div id="play-pred-badge" class="risk-badge-large text-center" style="margin: 0.5rem auto; display: inline-block;">🔴 HIGH MEDICATION RISK</div>
+                            <p style="font-size: 1.1rem; margin-top: 0.8rem; font-weight: 600; color: var(--text-secondary);">
+                                Model Confidence Probability: <span id="play-pred-prob" style="color: var(--color-primary);">87%</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- MATHEMATICAL INSIGHTS -->
+                    <div class="card margin-t">
+                        <div class="card-header border-b">
+                            <h3>Mathematical Anomaly Indicators</h3>
+                        </div>
+                        <div style="padding: 1.5rem;" id="play-math-placeholder" class="text-center">
+                            <p class="muted-small">Calculate deviations from baseline average...</p>
+                        </div>
+                        <div class="hidden" id="play-math-card" style="padding: 1.2rem;">
+                            <div style="display: flex; flex-direction: column; gap: 0.8rem; font-size: 0.85rem;">
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(14, 165, 233, 0.15); padding-bottom: 0.4rem;">
+                                    <strong>Medication Adherence</strong>
+                                    <span id="play-math-adherence" style="font-weight: 700;">62%</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(14, 165, 233, 0.15); padding-bottom: 0.4rem;">
+                                    <strong>Dosage Z-score Deviation (Z_d)</strong>
+                                    <span id="play-math-dosage-z" style="font-weight: 700;">2.41</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(14, 165, 233, 0.15); padding-bottom: 0.4rem;">
+                                    <strong>Frequency Z-score Deviation (Z_f)</strong>
+                                    <span id="play-math-freq-z" style="font-weight: 700;">1.87</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(14, 165, 233, 0.15); padding-bottom: 0.4rem;">
+                                    <strong>Overlapping Drug Interactions</strong>
+                                    <span id="play-math-interactions" style="font-weight: 700;">4</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding-bottom: 0.2rem;">
+                                    <strong>Baseline Mean Medications (μ)</strong>
+                                    <span id="play-math-mean" style="font-weight: 700;">4.2</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WHY DID THE MODEL FLAG THIS -->
+                    <div class="card margin-t">
+                        <div class="card-header border-b">
+                            <h3>Explainable Feature Contributions</h3>
+                        </div>
+                        <div style="padding: 1.5rem;" id="play-why-placeholder" class="text-center">
+                            <p class="muted-small">Evaluating decision boundaries...</p>
+                        </div>
+                        <div class="hidden" id="play-why-card" style="padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;">
+                            <div id="play-why-bars" style="display: flex; flex-direction: column; gap: 0.6rem;">
+                                <!-- populated via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Disclaimer -->
+                    <p style="font-size: 0.75rem; color: var(--color-danger); text-align: center; margin-top: 1rem; font-style: italic; font-weight: 600;">
+                        ⚠️ AI system is a decision-support widget. Paramedic/clinical check is recommended before use.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Interactive Refill Calculator Module -->
+            <div class="card margin-t">
+                <div class="card-header border-b">
+                    <h3>💊 Refill Supply Countdown Math Calculator</h3>
+                    <p class="muted-small">Calculate days remaining using prescription dosage math.</p>
+                </div>
+                <div style="padding: 1.2rem 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div>
+                        <form id="refill-calc-form" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="calc-remaining">Quantity Remaining (Tablets)</label>
+                                    <input type="number" id="calc-remaining" value="20" required>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="calc-dosage">Daily Dosage (Tablets/Day)</label>
+                                    <input type="number" id="calc-dosage" value="2" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-teal btn-sm" style="font-weight: 700; padding: 0.6rem;">Calculate Refill Countdown</button>
+                        </form>
+                    </div>
+                    <div style="display: flex; flex-direction: column; justify-content: center; background-color: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 1.2rem; text-align: center; border-left: 5px solid var(--color-primary);">
+                        <h4 id="calc-result-text" style="color: var(--color-primary); font-size: 1.1rem; font-weight: 800;">💊 Estimated medication remaining: 10 days</h4>
+                        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                            Formula: <code>Days Remaining = Quantity Remaining / Daily Dosage</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Model Performance Metrics & Details -->
+            <div class="card margin-t">
+                <div class="card-header border-b">
+                    <h3>Model Architecture Information</h3>
+                    <p class="muted-small">Validation split details & Feature weights calculated globally from training set.</p>
+                </div>
+                <div class="grid-2 margin-t" style="gap: 1.5rem; margin-top: 1rem;">
+                    <!-- Model Performances -->
+                    <div class="card" style="padding: 1.2rem; background: white;">
+                        <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.8rem; text-transform: uppercase;">Model Accuracy Scores</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+                            <div style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.6rem; border-radius: 6px; text-align: center;">
+                                <span style="font-size: 1.3rem; font-weight: 800; color: var(--color-primary); display: block;" id="play-meta-acc">--%</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">Accuracy</span>
+                            </div>
+                            <div style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.6rem; border-radius: 6px; text-align: center;">
+                                <span style="font-size: 1.3rem; font-weight: 800; color: var(--color-primary); display: block;" id="play-meta-prec">--%</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">Precision</span>
+                            </div>
+                            <div style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.6rem; border-radius: 6px; text-align: center;">
+                                <span style="font-size: 1.3rem; font-weight: 800; color: var(--color-primary); display: block;" id="play-meta-rec">--%</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">Recall</span>
+                            </div>
+                            <div style="background-color: #f8fafc; border: 1px solid var(--border-color); padding: 0.6rem; border-radius: 6px; text-align: center;">
+                                <span style="font-size: 1.3rem; font-weight: 800; color: var(--color-primary); display: block;" id="play-meta-f1">--%</span>
+                                <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">F1 Score</span>
+                            </div>
+                        </div>
+                        <div class="model-meta-info margin-t" style="margin-top: 1rem; font-size: 0.75rem; line-height: 1.4; color: var(--text-secondary);">
+                            <p><strong>Risk Model Type:</strong> <span id="play-meta-type" style="font-weight: 700;">--</span></p>
+                            <p><strong>Split Matrix:</strong> 80% Training / 20% Testing</p>
+                        </div>
+                    </div>
+
+                    <!-- MathX explanations -->
+                    <div class="card" style="padding: 1.2rem; background: white;">
+                        <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.8rem; text-transform: uppercase;">Engineered Math Formulas</h4>
+                        <div class="math-equations" style="display: flex; flex-direction: column; gap: 0.8rem;">
+                            <div>
+                                <h5 style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">Dosage Deviation Z-score (Z_d)</h5>
+                                <div style="background-color: #f8fafc; padding: 0.4rem; border-radius: 4px; font-family: monospace; text-align: center; margin: 0.2rem 0; font-size: 0.8rem; border: 1px solid var(--border-color);">
+                                    Z_d = (x_d - μ_d) / σ_d
+                                </div>
+                            </div>
+                            <div>
+                                <h5 style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">Medication Adherence (%)</h5>
+                                <div style="background-color: #f8fafc; padding: 0.4rem; border-radius: 4px; font-family: monospace; text-align: center; margin: 0.2rem 0; font-size: 0.8rem; border: 1px solid var(--border-color);">
+                                    Adherence = (Doses Taken / Doses Expected) × 100
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature weight chart -->
+                <div style="margin-top: 1.5rem; border-top: 1px solid rgba(14, 165, 233, 0.1); padding-top: 1.2rem;">
+                    <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.5rem;">GLOBAL FEATURE INFLUENCE WEIGHT SPLIT</h4>
+                    <div class="chart-container-large" style="height: 220px; position: relative;">
+                        <canvas id="featureImportanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= EMERGENCY SECTION ================= -->
+        <section id="emergency-section" class="tab-content">
+            <div class="card emergency-banner">
+                <h2>⚠️ Emergency Medical Summary Bypass View</h2>
+                <p>Reduced time-to-context window. Paramedic first responders access basic critical history without credentials.</p>
+            </div>
+            
+            <div class="card margin-t" style="border-left: 6px solid var(--color-danger); background-color: white;">
+                <div class="flex-between border-b padding-b">
+                    <div>
+                        <h3 id="em-pat-name">John Doe</h3>
+                        <p class="muted-small">Patient unique ID: #1 | DOB: 1959-10-14</p>
+                    </div>
+                    <div class="blood-badge" id="em-pat-blood">O+</div>
+                </div>
+                
+                <div class="grid-3 margin-t">
+                    <div class="emergency-box bg-red">
+                        <h4>Critical Allergies</h4>
+                        <ul id="em-pat-allergies" style="padding-left: 0.5rem; line-height: 1.6;">
+                            <li>Penicillin</li>
+                            <li>Sulfa Drugs</li>
+                        </ul>
+                    </div>
+                    <div class="emergency-box bg-orange">
+                        <h4>Active Medications</h4>
+                        <ul id="em-pat-meds" style="padding-left: 0.5rem; line-height: 1.6;">
+                            <li>Metformin</li>
+                            <li>Lisinopril</li>
+                        </ul>
+                    </div>
+                    <div class="emergency-box bg-slate-box">
+                        <h4>Major Chronic History</h4>
+                        <ul id="em-pat-chronic" style="padding-left: 0.5rem; line-height: 1.6;">
+                            <li>Hypertension</li>
+                            <li>Type 2 Diabetes</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="emergency-actions margin-t border-t padding-t flex-between">
+                    <p class="muted-small">Goal: Reduce the time required to understand a patient's healthcare background.</p>
+                    <button class="btn btn-outline btn-sm" onclick="window.print()">Print Emergency Summary</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ================= ADD PRESCRIPTION MODAL ================= -->
+    <div id="prescription-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header border-b flex-between" style="padding-bottom: 0.8rem; margin-bottom: 1.25rem;">
+                <h3>Add / Analyze Prescription</h3>
+                <span class="close-btn" id="close-modal-btn">&times;</span>
+            </div>
+            
+            <form id="patient-prescription-form" class="prescription-form">
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-med">Medicine Name</label>
+                        <input type="text" id="pat-rx-med" placeholder="e.g. Metformin" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-doc">Doctor Name</label>
+                        <input type="text" id="pat-rx-doc" placeholder="Dr. Sarah Smith" required>
+                    </div>
+                </div>
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-hosp">Hospital / Clinic</label>
+                        <input type="text" id="pat-rx-hosp" placeholder="Metro General Hospital" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-dosage">Dosage Amount (mg)</label>
+                        <input type="number" id="pat-rx-dosage" placeholder="500" required>
+                    </div>
+                </div>
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-freq">Dosage Frequency (Daily)</label>
+                        <input type="number" id="pat-rx-freq" placeholder="2" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-duration">Duration (Days)</label>
+                        <input type="number" id="pat-rx-duration" placeholder="30" required>
+                    </div>
+                </div>
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-adherence">Historical Adherence (%)</label>
+                        <input type="number" id="pat-rx-adherence" placeholder="95" min="0" max="100" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-delay">Refill Delay (Days)</label>
+                        <input type="number" id="pat-rx-delay" placeholder="1" required>
+                    </div>
+                </div>
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-yearly-freq">Refills / Year</label>
+                        <input type="number" id="pat-rx-yearly-freq" placeholder="12" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="pat-rx-interactions">Interaction Score</label>
+                        <input type="number" id="pat-rx-interactions" placeholder="0" readonly style="background-color: #e2e8f0; font-weight: 700; color: var(--text-secondary);">
+                    </div>
+                </div>
+                
+                <!-- Dynamic interaction alert popup area -->
+                <div id="pat-rx-warning-area" class="hidden" style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 0.8rem; border-radius: 8px; font-size: 0.75rem; margin: 0.8rem 0; font-weight: 600; text-align: left;">
+                    <!-- Populated dynamically -->
+                </div>
+                
+                <div class="modal-actions border-t padding-t margin-t" style="margin-top: 1.25rem;">
+                    <button type="button" class="btn btn-secondary" id="btn-load-preset-anomalous" style="margin-right: auto;">Load Anomalous Profile</button>
+                    <button type="submit" class="btn btn-teal">ANALYZE PRESCRIPTION</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Minimal Premium Closing Slide/Footer -->
+    <footer class="footer">
+        <div class="container footer-container">
+            <div style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">NALAM</div>
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--color-primary); margin-bottom: 1rem;">“Your Health. Your Goals. Smarter Healthcare.”</div>
+            <p class="disclaimer">
+                <strong>Prototype Disclaimer:</strong> NALAM is a clinical support prototype built for the MathX Hackathon. It does not replace the diagnosis or evaluation of licensed medical doctors.
+            </p>
+            <p style="margin-top: 0.8rem; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">
+                Team Members: Jercia A  •  Santhosh S  •  Nithya Shree S
+            </p>
+        </div>
+    </footer>
+
+    <!-- MathJax for rendering math formulas beautifully -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=2.0.1"></script>
+</body>
+</html>
