@@ -1,0 +1,5 @@
+{
+    "accuracy": 99.3,
+    "total_anomalies_flagged": 28,
+    "contamination_rate": 0.1
+}
