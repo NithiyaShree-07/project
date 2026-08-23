@@ -7,7 +7,7 @@ import numpy as np
 import joblib
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
-from ml.feature_engineering import calculate_interaction_score, compute_zscore, calculate_adherence
+from feature_engineering import calculate_interaction_score, compute_zscore, calculate_adherence
 
 app = Flask(__name__)
 app.secret_key = "nalam_secret_key_for_session_security"
